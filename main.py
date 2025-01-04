@@ -1,7 +1,7 @@
 # ============================================
 # CodeFusion
-# Author: Nayla Hanegan (naylahanegan@gmail.com)
-# Date: 9/23/2024
+# Author: Tabitha Hanegan (naylahanegan@gmail.com)
+# Date: 1/4/2025
 # License: MIT
 # ============================================
 
@@ -11,7 +11,6 @@ import subprocess
 import queue
 import threading
 import os
-import subprocess
 import customtkinter
 import version
 import platform
@@ -42,6 +41,8 @@ class App(customtkinter.CTk):
         self.n64_button.configure(state="disabled")
         self.appFrame = self.create_n64()
         self.appFrame.grid(row=0, column=1, padx=0, pady=0, rowspan=3, sticky="nsew")
+
+        self.is_patching = False  # Flag to control patching state
 
     def create_sidebar(self):
         self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
@@ -114,7 +115,6 @@ class App(customtkinter.CTk):
 
     def create_n64(self):
         frame = customtkinter.CTkFrame(self, fg_color=("#fcfcfc", "#2e2e2e"))
-
         return frame
 
     def create_gcn_wii(self):
@@ -124,8 +124,8 @@ class App(customtkinter.CTk):
         input_label = customtkinter.CTkLabel(self.gcn_wii_frame, text="Input: ", font=("Arial", 18, "bold"))
         input_label.place(x=20, y=20)
 
-        self.input_file_var = StringVar(value="C")
-        options = ["C", "PowerPC ASM", "GeckoOS Code"]
+        self.input_file_var = StringVar(value="PowerPC ASM")
+        options = ["PowerPC ASM", "GeckoOS Code"]
 
         input_frame = customtkinter.CTkFrame(self.gcn_wii_frame, fg_color="transparent")
         input_frame.place(x=120, y=20)
@@ -173,7 +173,7 @@ class App(customtkinter.CTk):
         self.insertionAddress.grid(row=3, column=0, padx=20, sticky="nsew")
         
         # Codes input
-        self.label2 = customtkinter.CTkLabel(self.gcn_wii_frame, text="C Code:", font=("Arial", 14, "bold"))
+        self.label2 = customtkinter.CTkLabel(self.gcn_wii_frame, text="PowerPC ASM:", font=("Arial", 14, "bold"))
         self.label2.grid(row=4, column=0, sticky="w", padx=20, pady=(20, 0))
         self.inputCode = customtkinter.CTkTextbox(self.gcn_wii_frame, height=100)
         self.inputCode.grid(row=5, column=0, padx=20, sticky="nsew")
@@ -188,11 +188,9 @@ class App(customtkinter.CTk):
         self.patchButton = customtkinter.CTkButton(self.gcn_wii_frame, text="Patch", command=self.patch)
         self.patchButton.grid(row=6, column=0, columnspan=2, pady=20)
 
-
         # Configure grid
         self.gcn_wii_frame.grid_columnconfigure(1, weight=1)
         self.gcn_wii_frame.grid_rowconfigure(5, weight=1)
-
 
         # Call this at the end of create_gcn_wii to set initial visibility
         self.toggle_insertion_address()
@@ -232,43 +230,72 @@ class App(customtkinter.CTk):
             self.label3.grid_configure(row=2, column=1, sticky="w", padx=20, pady=(100, 0))
             self.output.grid_configure(row=3, column=1, rowspan=3, padx=20, sticky="nsew")
 
-        if self.input_file_var.get() == "PowerPC ASM":
-            self.label2.configure(text="PowerPC ASM:")
-        elif self.input_file_var.get() == "GeckoOS Code":
+        if self.input_file_var.get() == "GeckoOS Code":
             self.label2.configure(text="GeckoOS Code:")
         else:
-            self.label2.configure(text="C Code:")
+            self.label2.configure(text="PowerPC ASM:")
 
         # Force the frame to update its layout
         self.update_idletasks()
-    
+
     def patch(self):
+        self.patchButton.configure(text="Patching .", state="disabled")  # Disable button and change text
+        self.is_patching = True  # Set the flag to indicate patching is in progress
+        self.patching_animation()  # Start the animation
+        threading.Thread(target=self.run_patch).start()
+
+    def patching_animation(self):
+        if self.is_patching:  # Check if patching is still in progress
+            current_text = self.patchButton.cget("text")
+            dot_count = current_text.count('.')  # Count the current number of dots
+            new_dot_count = (dot_count + 1) % 4  # Cycle through 0 to 3 dots
+            self.patchButton.configure(text="Patching " + '.' * new_dot_count)
+            self.after(500, self.patching_animation)  # Schedule the next update
+
+    def run_patch(self):
         if self.input_file_var.get() == "GeckoOS Code" and self.output_var.get() == "GeckoOS Code":
-            input_text = self.inputCode.get("1.0", "end-1c")  # Get text from input textbox
-            self.output.delete("1.0", "end")  # Clear output textbox
-            self.output.insert("1.0", input_text)  # Insert text into output textbox
-        
+            input_text = self.inputCode.get("1.0", "end-1c")
+            self.output.delete("1.0", "end")
+            self.output.insert("1.0", input_text)
+            return
+
         if self.input_file_var.get() == "PowerPC ASM" and self.output_var.get() == "GeckoOS Code":
-            input_text = self.inputCode.get("1.0", "end-1c")  # Get text from input textbox
-            
             # Save input text to temp.asm
+            input_text = self.inputCode.get("1.0", "end-1c")
             with open("temp.asm", "w") as temp_file:
                 temp_file.write(input_text)
-            
-            subprocess.run(["dependenices/codewrite/powerpc-gekko-as.exe", "-a32", "-mbig", "-mregnames", "-mgekko", "temp.asm"])  # Run the external program
 
-            # Read the output from temp.code
-            with open("a.out", "r") as output_file:
-                output_text = output_file.read()
-            
-            self.output.delete("1.0", "end")  # Clear output textbox
-            self.output.insert("1.0", output_text)  # Insert text into output textbox
-            
-            # Clean up temporary files
-            os.remove("temp.asm")
-            os.remove("a.out")
+            # Prepare command
+            cmd = ["dependenices/codewrite/powerpc-gekko-as.exe"]
+            if not platform.system() == "Windows":
+                cmd = ["wine"] + cmd
+                env = {**os.environ, "WINEDEBUG": "-all"}
+            else:
+                env = None
 
-        CTkMessagebox(message="Patched successfully.", title="Sucesss", icon="check", option_1="OK")
+            cmd.extend(["-a32", "-mbig", "-mregnames", "-mgekko", "temp.asm"])
+
+            try:
+                subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+                with open("a.out", "r") as output_file:
+                    output_text = output_file.read()
+                self.output.delete("1.0", "end")
+                self.output.insert("1.0", output_text)
+
+                # Show success message only if no error occurs
+                CTkMessagebox(message="Patched successfully.", title="Success", icon="check", option_1="OK")
+            except subprocess.CalledProcessError as e:
+                error_msg = e.stderr.decode()
+                CTkMessagebox(message=f"Error occurred: {error_msg}", title="Error", icon="warning", option_1="OK")
+            finally:
+                self.is_patching = False  # Reset the flag
+                self.patchButton.configure(text="Patch", state="normal")  # Reset button text and state
+                # Clean up temporary files
+                for file in ["temp.asm", "a.out"]:
+                    try:
+                        os.remove(file)
+                    except:
+                        pass
 
 if __name__ == "__main__":
     app = App()
