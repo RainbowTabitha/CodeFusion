@@ -166,9 +166,14 @@ class App(customtkinter.CTk):
             )
             radio_button.pack(side="left", padx=(0, 25))
         
+        # ROM file selection (only vmible when "Patched ROM" is selected)
+        self.rom_file_label = customtkinter.CTkLabel(self.gcn_wii_frame, text="ROM File:", font=("Arial", 18, "bold"))
+        self.rom_file_entry = customtkinter.CTkEntry(self.gcn_wii_frame, width=240)
+        self.rom_file_button = customtkinter.CTkButton(self.gcn_wii_frame, text="Browse", command=self.select_rom_file, width=80)
+
         # Insertion Address input
         self.label1 = customtkinter.CTkLabel(self.gcn_wii_frame, text="Insertion Address:", font=("Arial", 14, "bold"))
-        self.label1.grid(row=2, column=0, sticky="w", padx=20, pady=(100, 0))
+        self.label1.grid(row=2, column=0, sticky="w", padx=20, pady=(150, 0))
         self.insertionAddress = customtkinter.CTkTextbox(self.gcn_wii_frame, height=20)
         self.insertionAddress.grid(row=3, column=0, padx=20, sticky="nsew")
         
@@ -180,7 +185,7 @@ class App(customtkinter.CTk):
         
         # Output display
         self.label3 = customtkinter.CTkLabel(self.gcn_wii_frame, text="GeckoOS Code:", font=("Arial", 14, "bold"))
-        self.label3.grid(row=2, column=1, sticky="w", padx=20, pady=(100, 0))
+        self.label3.grid(row=2, column=1, sticky="w", padx=20, pady=(150, 0))
         self.output = customtkinter.CTkTextbox(self.gcn_wii_frame, height=200)
         self.output.grid(row=3, column=1, rowspan=3, padx=20, sticky="nsew")
 
@@ -202,7 +207,7 @@ class App(customtkinter.CTk):
             self.label1.grid_remove()
             self.insertionAddress.grid_remove()
             # Move Codes section up
-            self.label2.grid_configure(row=2, pady=(100, 0))
+            self.label2.grid_configure(row=2, pady=(150, 0))
             self.inputCode.grid_configure(row=3)
             # Adjust Output section
             self.label3.grid_configure(row=2)
@@ -226,10 +231,18 @@ class App(customtkinter.CTk):
         if self.output_var.get() != "GeckoOS Code":
             self.label3.grid_remove()
             self.output.grid_remove()
-        else:
-            self.label3.grid_configure(row=2, column=1, sticky="w", padx=20, pady=(100, 0))
-            self.output.grid_configure(row=3, column=1, rowspan=3, padx=20, sticky="nsew")
 
+            # Positioning the ROM file selection elements
+            self.rom_file_label.place(x=20, y=100)
+            self.rom_file_entry.place(x=120, y=100)
+            self.rom_file_button.place(x=370, y=100)
+        else:
+            self.label3.grid_configure(row=2, column=1, sticky="w", padx=20, pady=(150, 0))
+            self.output.grid_configure(row=3, column=1, rowspan=3, padx=20, sticky="nsew")
+            self.rom_file_label.place_forget()
+            self.rom_file_entry.place_forget()
+            self.rom_file_button.place_forget()
+            
         if self.input_file_var.get() == "GeckoOS Code":
             self.label2.configure(text="GeckoOS Code:")
         else:
@@ -237,6 +250,12 @@ class App(customtkinter.CTk):
 
         # Force the frame to update its layout
         self.update_idletasks()
+
+    def select_rom_file(self):
+        file_path = tk.filedialog.askopenfilename(title="Select ROM File", filetypes=[("Nintendo GameCube ROMs", "*.iso")])
+        if file_path:
+            self.rom_file_entry.delete(0, tk.END)  # Clear the entry
+            self.rom_file_entry.insert(0, file_path)  # Insert the selected file path
 
     def patch(self):
         self.patchButton.configure(text="Patching .", state="disabled")  # Disable button and change text
