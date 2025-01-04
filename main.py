@@ -15,6 +15,7 @@ import customtkinter
 import version
 import platform
 import credits
+import gecko
 from CTkMessagebox import CTkMessagebox
 from CTkToolTip import *
 
@@ -276,6 +277,8 @@ class App(customtkinter.CTk):
             input_text = self.inputCode.get("1.0", "end-1c")
             self.output.delete("1.0", "end")
             self.output.insert("1.0", input_text)
+            self.is_patching = False  # Reset the flag
+            self.patchButton.configure(text="Patch", state="normal")  # Reset button text and state
             return
 
         if self.input_file_var.get() == "PowerPC ASM" and self.output_var.get() == "GeckoOS Code":
@@ -285,7 +288,7 @@ class App(customtkinter.CTk):
                 temp_file.write(input_text)
 
             # Prepare command
-            cmd = ["dependenices/codewrite/powerpc-gekko-as.exe"]
+            cmd = ["dependencies/codewrite/powerpc-gekko-as.exe"]
             if not platform.system() == "Windows":
                 cmd = ["wine"] + cmd
                 env = {**os.environ, "WINEDEBUG": "-all"}
@@ -296,7 +299,9 @@ class App(customtkinter.CTk):
 
             try:
                 subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-                with open("a.out", "r") as output_file:
+                start_address = self.insertionAddress.get("1.0", "end-1c")  # Get the text from the textbox
+                gecko.convert_aout_to_gecko('a.out', start_address, 'b.out', overwrite=False)
+                with open("b.out", "r") as output_file:
                     output_text = output_file.read()
                 self.output.delete("1.0", "end")
                 self.output.insert("1.0", output_text)
