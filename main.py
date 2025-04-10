@@ -18,9 +18,16 @@ import credits
 import gecko
 from CTkMessagebox import CTkMessagebox
 from CTkToolTip import *
+from downloadSymbols import download_symbol_files
 
 customtkinter.set_appearance_mode("Dark")
 customtkinter.set_default_color_theme("blue")
+
+# Game ID mapping
+GAME_TO_ID = {
+    "None": "",
+    "Mario Party 5 (USA)": "GP5E01"
+}
 
 class App(customtkinter.CTk):
     def __init__(self):
@@ -126,7 +133,7 @@ class App(customtkinter.CTk):
         input_label.place(x=20, y=20)
 
         self.input_file_var = StringVar(value="PowerPC ASM")
-        options = ["PowerPC ASM", "GeckoOS Code"]
+        options = ["PowerPC ASM", "C Code", "GeckoOS Code"]
 
         input_frame = customtkinter.CTkFrame(self.gcn_wii_frame, fg_color="transparent")
         input_frame.place(x=120, y=20)
@@ -146,13 +153,13 @@ class App(customtkinter.CTk):
         
         # Output selection
         output_label = customtkinter.CTkLabel(self.gcn_wii_frame, text="Output: ", font=("Arial", 18, "bold"))
-        output_label.place(x=20, y=60)
+        output_label.place(x=20, y=80)
 
         self.output_var = StringVar(value="GeckoOS Code")
         output_options = ["GeckoOS Code", "Patched ROM", "XDelta Patch"]
 
         output_frame = customtkinter.CTkFrame(self.gcn_wii_frame, fg_color="transparent")
-        output_frame.place(x=120, y=60)
+        output_frame.place(x=120, y=80)
 
         for option in output_options:
             radio_button = customtkinter.CTkRadioButton(
@@ -166,15 +173,29 @@ class App(customtkinter.CTk):
                 command=self.toggle_insertion_address
             )
             radio_button.pack(side="left", padx=(0, 25))
+
+        # Game Selection Dropdown
+        self.game_label = customtkinter.CTkLabel(self.gcn_wii_frame, text="Game:", font=("Arial", 18, "bold"))
+        self.game_label.place(x=20, y=140)
         
-        # ROM file selection (only vmible when "Patched ROM" is selected)
+        self.game_var = StringVar(value="None")
+        self.game_dropdown = customtkinter.CTkOptionMenu(
+            self.gcn_wii_frame,
+            values=["None"] + sorted([k for k in GAME_TO_ID.keys() if k != "None"]),
+            variable=self.game_var,
+            command=self.on_game_selected,
+            width=200
+        )
+        self.game_dropdown.place(x=120, y=140)
+
+        # ROM file selection
         self.rom_file_label = customtkinter.CTkLabel(self.gcn_wii_frame, text="ROM File:", font=("Arial", 18, "bold"))
         self.rom_file_entry = customtkinter.CTkEntry(self.gcn_wii_frame, width=240)
         self.rom_file_button = customtkinter.CTkButton(self.gcn_wii_frame, text="Browse", command=self.select_rom_file, width=80)
 
         # Insertion Address input
         self.label1 = customtkinter.CTkLabel(self.gcn_wii_frame, text="Insertion Address:", font=("Arial", 14, "bold"))
-        self.label1.grid(row=2, column=0, sticky="w", padx=20, pady=(150, 0))
+        self.label1.grid(row=2, column=0, sticky="w", padx=20, pady=(200, 0))
         self.insertionAddress = customtkinter.CTkTextbox(self.gcn_wii_frame, height=20)
         self.insertionAddress.grid(row=3, column=0, padx=20, sticky="nsew")
         
@@ -186,7 +207,7 @@ class App(customtkinter.CTk):
         
         # Output display
         self.label3 = customtkinter.CTkLabel(self.gcn_wii_frame, text="GeckoOS Code:", font=("Arial", 14, "bold"))
-        self.label3.grid(row=2, column=1, sticky="w", padx=20, pady=(150, 0))
+        self.label3.grid(row=2, column=1, sticky="w", padx=20, pady=(200, 0))
         self.output = customtkinter.CTkTextbox(self.gcn_wii_frame, height=200)
         self.output.grid(row=3, column=1, rowspan=3, padx=20, sticky="nsew")
 
@@ -207,8 +228,13 @@ class App(customtkinter.CTk):
         if self.input_file_var.get() == "GeckoOS Code":
             self.label1.grid_remove()
             self.insertionAddress.grid_remove()
+            self.game_label.place_forget()
+            self.game_dropdown.place_forget()
+            self.rom_file_label.place_forget()
+            self.rom_file_entry.place_forget()
+            self.rom_file_button.place_forget()
             # Move Codes section up
-            self.label2.grid_configure(row=2, pady=(150, 0))
+            self.label2.grid_configure(row=2, pady=(200, 0))
             self.inputCode.grid_configure(row=3)
             # Adjust Output section
             self.label3.grid_configure(row=2)
@@ -219,6 +245,20 @@ class App(customtkinter.CTk):
         else:
             self.label1.grid()
             self.insertionAddress.grid()
+            if self.output_var.get() != "GeckoOS Code":
+                # Show ROM file selection and game selection on same line
+                self.rom_file_label.place(x=20, y=140)
+                self.rom_file_entry.place(x=120, y=140)
+                self.rom_file_button.place(x=370, y=140)
+                self.game_label.place(x=480, y=140)
+                self.game_dropdown.place(x=580, y=140)
+            else:
+                # If GeckoOS Code output, show only game selection
+                self.game_label.place(x=20, y=140)
+                self.game_dropdown.place(x=120, y=140)
+                self.rom_file_label.place_forget()
+                self.rom_file_entry.place_forget()
+                self.rom_file_button.place_forget()
             # Move Codes section back down
             self.label2.grid_configure(row=4, pady=(20, 0))
             self.inputCode.grid_configure(row=5)
@@ -232,20 +272,14 @@ class App(customtkinter.CTk):
         if self.output_var.get() != "GeckoOS Code":
             self.label3.grid_remove()
             self.output.grid_remove()
-
-            # Positioning the ROM file selection elements
-            self.rom_file_label.place(x=20, y=100)
-            self.rom_file_entry.place(x=120, y=100)
-            self.rom_file_button.place(x=370, y=100)
         else:
-            self.label3.grid_configure(row=2, column=1, sticky="w", padx=20, pady=(150, 0))
+            self.label3.grid_configure(row=2, column=1, sticky="w", padx=20, pady=(200, 0))
             self.output.grid_configure(row=3, column=1, rowspan=3, padx=20, sticky="nsew")
-            self.rom_file_label.place_forget()
-            self.rom_file_entry.place_forget()
-            self.rom_file_button.place_forget()
             
         if self.input_file_var.get() == "GeckoOS Code":
             self.label2.configure(text="GeckoOS Code:")
+        elif self.input_file_var.get() == "C Code":
+            self.label2.configure(text="C Code:")
         else:
             self.label2.configure(text="PowerPC ASM:")
 
@@ -320,6 +354,40 @@ class App(customtkinter.CTk):
                         os.remove(file)
                     except:
                         pass
+
+    def on_game_selected(self, choice):
+        if choice != "None":
+            game_id = GAME_TO_ID[choice]
+            msg = CTkMessagebox(
+                master=self,
+                title="Download Symbols",
+                message=f"Would you like to download symbol files for {choice}?",
+                icon="question",
+                option_1="Yes",
+                option_2="No",
+                width=300,
+                height=200
+            )
+            response = msg.get()
+            if response == "Yes":
+                if download_symbol_files(game_id):
+                    CTkMessagebox(
+                        master=self,
+                        message="Symbol files downloaded successfully!",
+                        title="Success",
+                        icon="check",
+                        width=300,
+                        height=200
+                    )
+                else:
+                    CTkMessagebox(
+                        master=self,
+                        message="Failed to download symbol files.",
+                        title="Error",
+                        icon="warning",
+                        width=300,
+                        height=200
+                    )
 
 if __name__ == "__main__":
     app = App()

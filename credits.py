@@ -9,7 +9,7 @@ def get_mit_license_text():
         mit_license_text = """
 MIT License
 
-Copyright (c) 2023 - 2024 Nayla Hanegan
+Copyright (c) 2023 - 2025 Tabitha Hanegan
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -35,12 +35,12 @@ def get_credits_text():
         credits_text = """
 CREDITS
 
-- Nayla for Program Work
+- Tabitha for Program Work
 """
         return credits_text
 
 def get_about_text():
         about_text = """
-About Program Master
+About CodeFusion
 """
         return about_text

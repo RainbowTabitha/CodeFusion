@@ -60,7 +60,7 @@ def convert_aout_to_gecko(input_file, start_address, output_file, overwrite=Fals
     code.insert(0, f"{start_address_int:08X} {num_lines:08X}\n")  # Insert at the beginning
     
     if not overwrite and len(data) % 8 == 0:
-            code.append("60000000 00000000")  # Final line only if complete
+            code.append("\n60000000 00000000")  # Final line only if complete
     
     if overwrite:
         if not len(data) % 8 == 0:
