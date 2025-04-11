@@ -4,10 +4,11 @@
 # Date: 4/10/2025
 # License: MIT
 # ============================================
-# import re
+
+import re
 import argparse
 
-def parse_input_file(input_file, output_file):
+def dtkSymbolsTxtToLst(input_file, output_file):
     pattern = re.compile(r'(\S+)\s*=\s*(?:\S+:)?(0x[0-9A-Fa-f]+);')
 
     with open(input_file, 'r') as infile, open(output_file, 'w') as outfile:

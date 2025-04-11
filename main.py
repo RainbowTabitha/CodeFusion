@@ -19,6 +19,8 @@ import gecko
 from CTkMessagebox import CTkMessagebox
 from CTkToolTip import *
 from downloadSymbols import download_symbol_files
+from dtkSymbolsTxtToLst import dtkSymbolsTxtToLst
+from symbolsLstToCodeWrite import parse_lst_file
 
 customtkinter.set_appearance_mode("Dark")
 customtkinter.set_default_color_theme("blue")
@@ -36,6 +38,7 @@ GAME_TO_ID = {
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
+        self.selected_game = None  # Initialize selected_game as an instance variable
 
         # configure window
         self.title("CodeFusion")
@@ -263,6 +266,7 @@ class App(customtkinter.CTk):
                 self.rom_file_label.place_forget()
                 self.rom_file_entry.place_forget()
                 self.rom_file_button.place_forget()
+
             # Move Codes section back down
             self.label2.grid_configure(row=4, pady=(20, 0))
             self.inputCode.grid_configure(row=5)
@@ -312,54 +316,77 @@ class App(customtkinter.CTk):
 
     def run_patch(self):
         if self.input_file_var.get() == "GeckoOS Code" and self.output_var.get() == "GeckoOS Code":
-            input_text = self.inputCode.get("1.0", "end-1c")
-            self.output.delete("1.0", "end")
-            self.output.insert("1.0", input_text)
-            self.is_patching = False  # Reset the flag
-            self.patchButton.configure(text="Patch", state="normal")  # Reset button text and state
-            return
+            self.handle_geckoos_code()
+        elif self.input_file_var.get() == "PowerPC ASM" and self.output_var.get() == "GeckoOS Code":
+            self.handle_powerpc_asm()
 
-        if self.input_file_var.get() == "PowerPC ASM" and self.output_var.get() == "GeckoOS Code":
-            # Save input text to temp.asm
+        self.is_patching = False  # Reset the flag
+        self.patchButton.configure(text="Patch", state="normal")  # Reset button text and state
+
+    def handle_geckoos_code(self):
+        if self.selected_game != None:
+            self.add_symbols_to_temp_asm()
+        else:
             input_text = self.inputCode.get("1.0", "end-1c")
             with open("temp.asm", "w") as temp_file:
                 temp_file.write(input_text)
 
-            # Prepare command
-            cmd = ["dependencies/codewrite/powerpc-gekko-as.exe"]
-            if not platform.system() == "Windows":
-                cmd = ["wine"] + cmd
-                env = {**os.environ, "WINEDEBUG": "-all"}
-            else:
-                env = None
 
-            cmd.extend(["-a32", "-mbig", "-mregnames", "-mgekko", "temp.asm"])
+        input_text = self.inputCode.get("1.0", "end-1c")
+        self.output.delete("1.0", "end")
+        self.output.insert("1.0", input_text)
 
-            try:
-                subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-                start_address = self.insertionAddress.get("1.0", "end-1c")  # Get the text from the textbox
-                gecko.convert_aout_to_gecko('a.out', start_address, 'b.out', overwrite=False)
-                with open("b.out", "r") as output_file:
-                    output_text = output_file.read()
-                self.output.delete("1.0", "end")
-                self.output.insert("1.0", output_text)
+    def add_symbols_to_temp_asm(self):
+        game_id = GAME_TO_ID[self.selected_game]
+        symbol_file_path = os.path.join(os.path.dirname(__file__), f"symbols/{game_id}.sym")
 
-                # Show success message only if no error occurs
-                CTkMessagebox(message="Patched successfully.", title="Success", icon="check", option_1="OK")
-            except subprocess.CalledProcessError as e:
-                error_msg = e.stderr.decode()
-                CTkMessagebox(message=f"Error occurred: {error_msg}", title="Error", icon="warning", option_1="OK")
-            finally:
-                self.is_patching = False  # Reset the flag
-                self.patchButton.configure(text="Patch", state="normal")  # Reset button text and state
-                # Clean up temporary files
-                for file in ["temp.asm", "a.out"]:
-                    try:
-                        os.remove(file)
-                    except:
-                        pass
+        dtkSymbolsTxtToLst(symbol_file_path, "temp.out")
+        output_filename = parse_lst_file("temp.out", "temp_codewrite.out")
+
+        with open(output_filename, 'r') as output_file:
+            generated_code = output_file.read()
+
+        input_text = self.inputCode.get("1.0", "end-1c")
+        compiled_code = generated_code + "\n" + input_text
+
+        with open('temp.asm', 'r+') as temp_file:
+            existing_content = temp_file.read()
+            temp_file.seek(0)
+            temp_file.write(compiled_code + "\n" + existing_content)
+
+        print("Successfully added symbols to the temp.asm file.")
+
+    def handle_powerpc_asm(self):
+        if self.selected_game != "None":
+            self.add_symbols_to_temp_asm()
+
+        cmd = ["dependencies/codewrite/powerpc-gekko-as.exe"]
+        if not platform.system() == "Windows":
+            cmd = ["wine"] + cmd
+            env = {**os.environ, "WINEDEBUG": "-all"}
+        else:
+            env = None
+
+        cmd.extend(["-a32", "-mbig", "-mregnames", "-mgekko", "temp.asm"])
+
+        try:
+            subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+            start_address = self.insertionAddress.get("1.0", "end-1c")
+            gecko.convert_aout_to_gecko('a.out', start_address, 'b.out', overwrite=False)
+            with open("b.out", "r") as output_file:
+                output_text = output_file.read()
+            self.output.delete("1.0", "end")
+            self.output.insert("1.0", output_text)
+
+            CTkMessagebox(message="Patched successfully.", title="Success", icon="check", option_1="OK")
+        except subprocess.CalledProcessError as e:
+            error_msg = e.stderr.decode()
+            CTkMessagebox(message=f"Error occurred: {error_msg}", title="Error", icon="warning", option_1="OK")
+        finally:
+            pass
 
     def on_game_selected(self, choice):
+        self.selected_game = choice  # Update the instance variable with the selected game
         game_id = GAME_TO_ID[choice]
         symbol_file_path = os.path.join(os.path.dirname(__file__), f"symbols/{game_id}.sym")
         if choice != "None" and not os.path.exists(symbol_file_path):
