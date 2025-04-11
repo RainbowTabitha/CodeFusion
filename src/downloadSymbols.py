@@ -28,10 +28,10 @@ def download_symbol_files(game_id: str) -> bool:
     - bool: True if the download succeeded, False otherwise.
     """
     if game_id not in SYMBOL_URL_MAPPING:
-        print(f"Error: No symbol file URL found for game ID {game_id}")
+        print(f"Error: No symbol file URL found fo`r game ID {game_id}")
         return False
 
-    symbol_dir = os.path.join("symbols")
+    symbol_dir = os.path.join("../symbols")
     os.makedirs(symbol_dir, exist_ok=True)
 
     symbol_url = SYMBOL_URL_MAPPING[game_id]

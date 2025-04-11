@@ -1,11 +1,17 @@
-# ============================================
-# CodeFusion
-# Author: Tabitha Hanegan (naylahanegan@gmail.com)
-# Date: 4/10/2025
-# License: MIT
-# ============================================
-
+import re
 import tempfile
+
+
+def dtkSymbolsTxtToLst(input_file, output_file):
+    pattern = re.compile(r'(\S+)\s*=\s*(?:\S+:)?(0x[0-9A-Fa-f]+);')
+
+    with open(input_file, 'r') as infile, open(output_file, 'w') as outfile:
+        for line in infile:
+            match = pattern.match(line)
+            if match:
+                label, address = match.groups()
+                outfile.write(f'{address[2:]}:{label}\n')
+
 
 def parse_lst_file(lst_file_path, output_filename):
     codewrite_lst = []
@@ -13,7 +19,6 @@ def parse_lst_file(lst_file_path, output_filename):
     if output_filename is None:
         with tempfile.NamedTemporaryFile(delete=False, suffix='.codewrite.lst') as temp_output_file:
             output_filename = temp_output_file.name
-
 
     try:
         with open(lst_file_path, 'r') as lst_file:
@@ -43,4 +48,4 @@ def parse_lst_file(lst_file_path, output_filename):
     except Exception as e:
         print(f"Error while parsing {lst_file_path}: {e}")
 
-    return output_filename
+    return output_filename 

@@ -1,29 +1,13 @@
-# ============================================
-# CodeFusion
-# Author: Tabitha Hanegan (naylahanegan@gmail.com)
-# Date: 4/10/2025
-# License: MIT
-# ============================================
-
-import tkinter as tk
-from tkinter import scrolledtext, StringVar
-import subprocess
-import queue
-import threading
-import os
 import customtkinter
 import version
-import platform
-import credits
-import gecko
+import threading
 from CTkMessagebox import CTkMessagebox
-from CTkToolTip import *
-from downloadSymbols import download_symbol_files
-from dtkSymbolsTxtToLst import dtkSymbolsTxtToLst
-from symbolsLstToCodeWrite import parse_lst_file
+from tkinter import StringVar
+import tkinter as tk
 
-customtkinter.set_appearance_mode("Dark")
-customtkinter.set_default_color_theme("blue")
+import os
+from game_logic import GameLogic
+from downloadSymbols import download_symbol_files
 
 # Game ID mapping
 GAME_TO_ID = {
@@ -58,6 +42,8 @@ class App(customtkinter.CTk):
         self.appFrame.grid(row=0, column=1, padx=0, pady=0, rowspan=3, sticky="nsew")
 
         self.is_patching = False  # Flag to control patching state
+        self.logic = GameLogic()  # Instantiate GameLogic
+
 
     def create_sidebar(self):
         self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
@@ -205,7 +191,10 @@ class App(customtkinter.CTk):
         self.label1.grid(row=2, column=0, sticky="w", padx=20, pady=(200, 0))
         self.insertionAddress = customtkinter.CTkTextbox(self.gcn_wii_frame, height=20)
         self.insertionAddress.grid(row=3, column=0, padx=20, sticky="nsew")
-        
+
+        # Bind key event to validate hex input
+        self.insertionAddress.bind("<KeyRelease>", self.validate_hex_input)
+
         # Codes input
         self.label2 = customtkinter.CTkLabel(self.gcn_wii_frame, text="PowerPC ASM:", font=("Arial", 14, "bold"))
         self.label2.grid(row=4, column=0, sticky="w", padx=20, pady=(20, 0))
@@ -316,79 +305,17 @@ class App(customtkinter.CTk):
 
     def run_patch(self):
         if self.input_file_var.get() == "GeckoOS Code" and self.output_var.get() == "GeckoOS Code":
-            self.handle_geckoos_code()
+            self.logic.handle_geckoos_code(self)
         elif self.input_file_var.get() == "PowerPC ASM" and self.output_var.get() == "GeckoOS Code":
-            self.handle_powerpc_asm()
+            self.logic.handle_powerpc_asm(self)
 
         self.is_patching = False  # Reset the flag
         self.patchButton.configure(text="Patch", state="normal")  # Reset button text and state
 
-    def handle_geckoos_code(self):
-        if self.selected_game != None:
-            self.add_symbols_to_temp_asm()
-        else:
-            input_text = self.inputCode.get("1.0", "end-1c")
-            with open("temp.asm", "w") as temp_file:
-                temp_file.write(input_text)
-
-
-        input_text = self.inputCode.get("1.0", "end-1c")
-        self.output.delete("1.0", "end")
-        self.output.insert("1.0", input_text)
-
-    def add_symbols_to_temp_asm(self):
-        game_id = GAME_TO_ID[self.selected_game]
-        symbol_file_path = os.path.join(os.path.dirname(__file__), f"symbols/{game_id}.sym")
-
-        dtkSymbolsTxtToLst(symbol_file_path, "temp.out")
-        output_filename = parse_lst_file("temp.out", "temp_codewrite.out")
-
-        with open(output_filename, 'r') as output_file:
-            generated_code = output_file.read()
-
-        input_text = self.inputCode.get("1.0", "end-1c")
-        compiled_code = generated_code + "\n" + input_text
-
-        with open('temp.asm', 'r+') as temp_file:
-            existing_content = temp_file.read()
-            temp_file.seek(0)
-            temp_file.write(compiled_code + "\n" + existing_content)
-
-        print("Successfully added symbols to the temp.asm file.")
-
-    def handle_powerpc_asm(self):
-        if self.selected_game != "None":
-            self.add_symbols_to_temp_asm()
-
-        cmd = ["dependencies/codewrite/powerpc-gekko-as.exe"]
-        if not platform.system() == "Windows":
-            cmd = ["wine"] + cmd
-            env = {**os.environ, "WINEDEBUG": "-all"}
-        else:
-            env = None
-
-        cmd.extend(["-a32", "-mbig", "-mregnames", "-mgekko", "temp.asm"])
-
-        try:
-            subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-            start_address = self.insertionAddress.get("1.0", "end-1c")
-            gecko.convert_aout_to_gecko('a.out', start_address, 'b.out', overwrite=False)
-            with open("b.out", "r") as output_file:
-                output_text = output_file.read()
-            self.output.delete("1.0", "end")
-            self.output.insert("1.0", output_text)
-
-            CTkMessagebox(message="Patched successfully.", title="Success", icon="check", option_1="OK")
-        except subprocess.CalledProcessError as e:
-            error_msg = e.stderr.decode()
-            CTkMessagebox(message=f"Error occurred: {error_msg}", title="Error", icon="warning", option_1="OK")
-        finally:
-            pass
-
     def on_game_selected(self, choice):
-        self.selected_game = choice  # Update the instance variable with the selected game
+        self.selected_game = choice
         game_id = GAME_TO_ID[choice]
-        symbol_file_path = os.path.join(os.path.dirname(__file__), f"symbols/{game_id}.sym")
+        symbol_file_path = os.path.join(os.path.dirname(__file__), f"../symbols/{game_id}.sym")
         if choice != "None" and not os.path.exists(symbol_file_path):
             msg = CTkMessagebox(
                 master=self,
@@ -421,6 +348,10 @@ class App(customtkinter.CTk):
                         height=200
                     )
 
-if __name__ == "__main__":
-    app = App()
-    app.mainloop()
+    def validate_hex_input(self, event):
+        current_value = self.insertionAddress.get("1.0", "end-1c")
+        # Filter out non-hex characters
+        filtered_value = ''.join(c for c in current_value if c in "0123456789abcdefABCDEF")
+        if current_value != filtered_value:
+            self.insertionAddress.delete("1.0", "end")
+            self.insertionAddress.insert("1.0", filtered_value)
