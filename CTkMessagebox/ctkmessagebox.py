@@ -70,7 +70,7 @@ class CTkMessagebox(customtkinter.CTkToplevel):
             self.spawn_y = int(self.master_window.winfo_height() * .5 + self.master_window.winfo_y() - .5 * self.height + 20)
             
         self.after(10)
-        self.geometry(f"{self.width}x{self.height}+100+100")
+        self.geometry(f"{self.width}x{self.height}+{self.spawn_x}+{self.spawn_y}")
         self.title(title)
         self.resizable(width=False, height=False)
         self.fade = fade_in_duration
@@ -132,8 +132,7 @@ class CTkMessagebox(customtkinter.CTkToplevel):
                 option_1 = options[-1]
                 option_2 = options[-2]
                 option_3 = options[-3]
-            except IndexError as e:
-                print(f"IndexError: {e}")
+            except IndexError: None
             
         if bg_color=="default":
             self.bg_color = self._apply_appearance_mode(customtkinter.ThemeManager.theme["CTkFrame"]["fg_color"])
@@ -348,8 +347,6 @@ class CTkMessagebox(customtkinter.CTkToplevel):
  
         self.bind("<Escape>", lambda e: self.button_event())
 
-        self.event = None  # Initialize the event attribute
-
     def place_widget(self, widget, x=10, y=10, **args):
         if "master" in args:
             del args["master"]
@@ -365,8 +362,8 @@ class CTkMessagebox(customtkinter.CTkToplevel):
             self.selected_button.configure(border_color=self.bt_hv_color, border_width=3)
             self.selected_option = getattr(self, "option_text_"+str(option_focus))
             self.selected_button.bind("<Return>", lambda event: self.button_event(self.selected_option))
-        except AttributeError as e:
-            print(f"AttributeError: {e}")
+        except AttributeError:
+            return
         
         self.bind("<Left>", lambda e: self.change_left())
         self.bind("<Right>", lambda e: self.change_right())

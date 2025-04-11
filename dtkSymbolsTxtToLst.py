@@ -1,4 +1,10 @@
-import re
+# ============================================
+# CodeFusion
+# Author: Tabitha Hanegan (naylahanegan@gmail.com)
+# Date: 4/10/2025
+# License: MIT
+# ============================================
+# import re
 import argparse
 
 def parse_input_file(input_file, output_file):

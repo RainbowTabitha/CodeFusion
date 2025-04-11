@@ -1,7 +1,7 @@
 # ============================================
 # CodeFusion
 # Author: Tabitha Hanegan (naylahanegan@gmail.com)
-# Date: 4/5/2025
+# Date: 4/10/2025
 # License: MIT
 # ============================================
 
@@ -10,7 +10,11 @@ import requests
 
 # Mapping of game IDs to their symbol file URLs
 SYMBOL_URL_MAPPING = {
+    "GMPE01_00": "https://raw.githubusercontent.com/mariopartyrd/marioparty4/refs/heads/main/config/GMPE01_00/symbols.txt",
+    "GMPE01_01": "https://raw.githubusercontent.com/mariopartyrd/marioparty4/refs/heads/main/config/GMPE01_00/symbols.txt",
     "GP5E01": "https://raw.githubusercontent.com/mariopartyrd/marioparty5/refs/heads/main/config/GP5E01/symbols.txt",
+    "GP6E01": "https://raw.githubusercontent.com/mariopartyrd/marioparty6/refs/heads/main/config/GP6E01/symbols.txt",
+    "GP7E01": "https://raw.githubusercontent.com/mariopartyrd/marioparty7/refs/heads/main/config/GP7E01/symbols.txt",
 }
 
 def download_symbol_files(game_id: str) -> bool:
@@ -27,7 +31,7 @@ def download_symbol_files(game_id: str) -> bool:
         print(f"Error: No symbol file URL found for game ID {game_id}")
         return False
 
-    symbol_dir = os.path.join("symbols", game_id)
+    symbol_dir = os.path.join("symbols")
     os.makedirs(symbol_dir, exist_ok=True)
 
     symbol_url = SYMBOL_URL_MAPPING[game_id]

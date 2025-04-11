@@ -1,7 +1,7 @@
 # ============================================
 # CodeFusion
 # Author: Tabitha Hanegan (naylahanegan@gmail.com)
-# Date: 1/4/2025
+# Date: 4/10/2025
 # License: MIT
 # ============================================
 
@@ -26,7 +26,11 @@ customtkinter.set_default_color_theme("blue")
 # Game ID mapping
 GAME_TO_ID = {
     "None": "",
-    "Mario Party 5 (USA)": "GP5E01"
+    "Mario Party 4 (USA) [Revision 0]": "GMPE01_00",
+    "Mario Party 4 (USA) [Revision 1]": "GMPE01_01",
+    "Mario Party 5 (USA)": "GP5E01",
+    "Mario Party 6 (USA)": "GP6E01",
+    "Mario Party 7 (USA)": "GP7E01"
 }
 
 class App(customtkinter.CTk):
@@ -183,7 +187,7 @@ class App(customtkinter.CTk):
             self.gcn_wii_frame,
             values=["None"] + sorted([k for k in GAME_TO_ID.keys() if k != "None"]),
             variable=self.game_var,
-            command=self.on_game_selected,
+            command=lambda choice=self.game_var.get(): threading.Thread(target=self.on_game_selected, args=(choice,)).start(),
             width=200
         )
         self.game_dropdown.place(x=120, y=140)
@@ -356,8 +360,9 @@ class App(customtkinter.CTk):
                         pass
 
     def on_game_selected(self, choice):
-        if choice != "None":
-            game_id = GAME_TO_ID[choice]
+        game_id = GAME_TO_ID[choice]
+        symbol_file_path = os.path.join(os.path.dirname(__file__), f"symbols/{game_id}.sym")
+        if choice != "None" and not os.path.exists(symbol_file_path):
             msg = CTkMessagebox(
                 master=self,
                 title="Download Symbols",
