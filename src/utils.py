@@ -1,3 +1,11 @@
+# ============================================
+# CodeFusion
+# Author: Tabitha Hanegan (naylahanegan@gmail.com)
+# Date: 4/21/2025
+# License: MIT
+# ===========================================
+
+
 # Game ID mapping
 GAME_TO_ID = {
     "None": "",

@@ -1,3 +1,10 @@
+# ============================================
+# CodeFusion
+# Author: Tabitha Hanegan (naylahanegan@gmail.com)
+# Date: 4/21/2025
+# License: MIT
+# ===========================================
+
 import struct
 
 def convert_aout_to_gecko(input_file, start_address, output_file, overwrite=False):

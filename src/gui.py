@@ -1,3 +1,10 @@
+# ============================================
+# CodeFusion
+# Author: Tabitha Hanegan (naylahanegan@gmail.com)
+# Date: 4/21/2025
+# License: MIT
+# ===========================================
+
 import customtkinter
 import version
 import threading
@@ -8,16 +15,8 @@ import tkinter as tk
 import os
 from game_logic import GameLogic
 from downloadSymbols import download_symbol_files
-
-# Game ID mapping
-GAME_TO_ID = {
-    "None": "",
-    "Mario Party 4 (USA) [Revision 0]": "GMPE01_00",
-    "Mario Party 4 (USA) [Revision 1]": "GMPE01_01",
-    "Mario Party 5 (USA)": "GP5E01",
-    "Mario Party 6 (USA)": "GP6E01",
-    "Mario Party 7 (USA)": "GP7E01"
-}
+from utils import GAME_TO_ID
+from syntaxHighlighting import SyntaxHighlightingText
 
 class App(customtkinter.CTk):
     def __init__(self):

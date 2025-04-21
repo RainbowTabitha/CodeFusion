@@ -1,6 +1,12 @@
+# ============================================
+# CodeFusion
+# Author: Tabitha Hanegan (naylahanegan@gmail.com)
+# Date: 4/21/2025
+# License: MIT
+# ===========================================
+
 import re
 import tempfile
-
 
 def dtkSymbolsTxtToLst(input_file, output_file):
     pattern = re.compile(r'(\S+)\s*=\s*(?:\S+:)?(0x[0-9A-Fa-f]+);')

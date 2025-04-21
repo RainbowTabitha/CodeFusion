@@ -1,3 +1,10 @@
+# ============================================
+# CodeFusion
+# Author: Tabitha Hanegan (naylahanegan@gmail.com)
+# Date: 4/21/2025
+# License: MIT
+# ===========================================
+
 import subprocess
 import sys
 import os
