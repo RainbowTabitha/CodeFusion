@@ -7,15 +7,7 @@
 
 import os
 import requests
-
-# Mapping of game IDs to their symbol file URLs
-SYMBOL_URL_MAPPING = {
-    "GMPE01_00": "https://raw.githubusercontent.com/mariopartyrd/marioparty4/refs/heads/main/config/GMPE01_00/symbols.txt",
-    "GMPE01_01": "https://raw.githubusercontent.com/mariopartyrd/marioparty4/refs/heads/main/config/GMPE01_01/symbols.txt",
-    "GP5E01": "https://raw.githubusercontent.com/mariopartyrd/marioparty5/refs/heads/main/config/GP5E01/symbols.txt",
-    "GP6E01": "https://raw.githubusercontent.com/mariopartyrd/marioparty6/refs/heads/main/config/GP6E01/symbols.txt",
-    "GP7E01": "https://raw.githubusercontent.com/mariopartyrd/marioparty7/refs/heads/main/config/GP7E01/symbols.txt",
-}
+from utils import SYMBOL_URL_MAPPING
 
 def download_symbol_files(game_id: str) -> bool:
     """

@@ -19,7 +19,7 @@ def compile_to_asm(filename):
     else:
         env = None
 
-    cmd.extend(["-mcpu=powerpc", "-fno-asynchronous-unwind-tables", "-fno-ident", "-fno-common", "-O1", "-fno-optimize-sibling-calls", filename, "-o", f"{base_name}.s"])
+    cmd.extend(["-mcpu=powerpc", "-S", "-fno-asynchronous-unwind-tables", "-fno-ident", "-fno-common", "-O0", "-fno-optimize-sibling-calls", filename, "-o", f"{base_name}.s"])
 
     try:
         # Run the compilation command
@@ -120,9 +120,14 @@ def update_include_paths(file_path, game_id):
                     new_includes += f'#include "../{relative_path}"\n'
 
         # Check for a header file matching the game_id in the include directory
-        game_id_header = os.path.join('include', f'{game_id}.h')
+        game_id_header = os.path.join('../include', f'{game_id}.h')
+        print(f"Looking for header file at: {game_id_header}")
+
         if os.path.exists(game_id_header):
-            new_includes += f'#include "../{game_id}.h"\n'
+            print(f"Header file found: {game_id_header}")
+            new_includes += f'#include "../include/{game_id}.h"\n'
+        else:
+            print(f"Header file not found: {game_id_header}")
 
         # Prepend new includes to the existing content
         updated_content = new_includes + content
