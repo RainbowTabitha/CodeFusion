@@ -16,7 +16,6 @@ import os
 from game_logic import GameLogic
 from downloadSymbols import download_symbol_files
 from utils import GAME_TO_ID
-from syntaxHighlighting import SyntaxHighlightingText
 
 class App(customtkinter.CTk):
     def __init__(self):
