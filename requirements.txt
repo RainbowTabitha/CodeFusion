@@ -2,3 +2,4 @@ pyinstaller
 customtkinter
 requests
 Pillow
+CTkToolTip
