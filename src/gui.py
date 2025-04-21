@@ -16,6 +16,8 @@ import os
 from game_logic import GameLogic
 from downloadSymbols import download_symbol_files
 from utils import GAME_TO_ID
+from credits import get_credits_text, get_about_text, get_mit_license_text
+
 
 class App(customtkinter.CTk):
     def __init__(self):
@@ -35,8 +37,8 @@ class App(customtkinter.CTk):
         self.appFrame = None
         
         # set default values
-        self.n64_button.configure(state="disabled")
-        self.appFrame = self.create_n64()
+        self.gcn_wii_button.configure(state="disabled")
+        self.appFrame = self.create_gcn_wii()
         self.appFrame.grid(row=0, column=1, padx=0, pady=0, rowspan=3, sticky="nsew")
 
         self.is_patching = False  # Flag to control patching state
@@ -53,6 +55,7 @@ class App(customtkinter.CTk):
 
         self.n64_button = customtkinter.CTkButton(self.sidebar_frame, text="Nintendo 64", command=self.n64_view)
         self.n64_button.grid(row=1, column=0, padx=20, pady=10)
+        self.n64_button.grid_remove()  # Hide the N64 button
 
         self.gcn_wii_button = customtkinter.CTkButton(self.sidebar_frame, text="GameCube / Wii", command=self.gcn_wii_view)
         self.gcn_wii_button.grid(row=2, column=0, padx=20, pady=10)
@@ -76,7 +79,7 @@ class App(customtkinter.CTk):
         self.create_game_frame("Credits")
 
     def update_button_states(self, active_button):
-        buttons = {"n64": self.n64_button, "gcn_wii": self.gcn_wii_button, "credits": self.credits_button}
+        buttons = {"gcn_wii": self.gcn_wii_button, "credits": self.credits_button}
         for button_name, button in buttons.items():
             button.configure(state="disabled" if button_name == active_button else "normal")
 
@@ -87,7 +90,7 @@ class App(customtkinter.CTk):
     def create_game_frame(self, game_name):
         self.reset_game_frames()
         frame_creators = {
-            "Nintendo 64": self.create_n64,
+            #"Nintendo 64": self.create_n64,
             "GameCube / Wii": self.create_gcn_wii,
             "Credits": self.create_credits
         }
@@ -102,13 +105,31 @@ class App(customtkinter.CTk):
         frame = customtkinter.CTkFrame(self, fg_color=("#fcfcfc", "#2e2e2e"))
         tabview = customtkinter.CTkTabview(frame, width=2000, height=650, fg_color=("#fcfcfc", "#323232"))
         tabview.pack(padx=20, pady=20)
-        
-        for tab_name in ["Credits", "About", "License"]:
+
+        # Add tabs and set content
+        tab_content = {
+            "Credits": get_credits_text(),
+            "About": get_about_text(),
+            "License": get_mit_license_text()
+        }
+
+        for tab_name, content in tab_content.items():
             tabview.add(tab_name)
-            content_func = getattr(credits, f"get_{tab_name.lower()}_text", lambda: "")
-            content = customtkinter.CTkLabel(tabview.tab(tab_name), width=80, height=20, text=content_func())
-            content.pack(padx=10, pady=10)
-        
+            
+            if tab_name == "License":
+                header_label = customtkinter.CTkLabel(tabview.tab(tab_name), text="MIT License", font=customtkinter.CTkFont(size=20, weight="bold"), anchor="nw")
+            elif tab_name == "About":
+                header_label = customtkinter.CTkLabel(tabview.tab(tab_name), text="About CodeFusion", font=customtkinter.CTkFont(size=20, weight="bold"), anchor="nw")
+            elif tab_name == "Credits":
+                header_label = customtkinter.CTkLabel(tabview.tab(tab_name), text="Credits", font=customtkinter.CTkFont(size=20, weight="bold"), anchor="nw")
+            else:
+                header_label = None
+            header_label.pack(padx=10, pady=(10, 0), fill="x")
+
+            # Use CTkLabel for content with left alignment
+            content_label = customtkinter.CTkLabel(tabview.tab(tab_name), text=content, anchor="nw", justify="left", wraplength=1800)
+            content_label.pack(padx=10, pady=10, fill="both", expand=True)
+
         tabview.set("About")
         return frame
 
@@ -147,7 +168,7 @@ class App(customtkinter.CTk):
         output_label.place(x=20, y=80)
 
         self.output_var = StringVar(value="GeckoOS Code")
-        output_options = ["GeckoOS Code", "Patched ROM", "XDelta Patch"]
+        output_options = ["GeckoOS Code"]#, "Patched ROM", "XDelta Patch"]
 
         output_frame = customtkinter.CTkFrame(self.gcn_wii_frame, fg_color="transparent")
         output_frame.place(x=120, y=80)

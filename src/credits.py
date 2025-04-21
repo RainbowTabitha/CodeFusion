@@ -7,8 +7,6 @@
 
 def get_mit_license_text():
         mit_license_text = """
-MIT License
-
 Copyright (c) 2023 - 2025 Tabitha Hanegan
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,14 +31,14 @@ SOFTWARE.
 
 def get_credits_text():
         credits_text = """
-CREDITS
-
 - Tabitha for Program Work
+- Rainchus/plc for decompiling Mario Party 4
+- TheGag96 for CodeWrite
 """
         return credits_text
 
 def get_about_text():
         about_text = """
-About CodeFusion
+CodeFusion is a tool for creating and applying game patches.
 """
         return about_text
