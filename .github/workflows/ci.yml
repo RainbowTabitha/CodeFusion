@@ -15,8 +15,8 @@ jobs:
     - name: Install PIP Modules
       run: python -m pip install -r requirements.txt
 
-    - name: Build Project (Dynamic build)
-      run: pyinstaller -w --onefile .\main.py --add-data "dependencies/*/;dependencies" --add-data "include/*/;include --name="CodeFusion" --icon="icon.ico"
+    - name: Build Project
+      run: pyinstaller -w --onefile src/main.py --add-data "dependencies/*/;dependencies" --add-data "include/*/;include" --name="CodeFusion" --icon="icon.ico"
 
     - name: Trusted Signing
       uses: azure/trusted-signing-action@v0.5.1
