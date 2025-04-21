@@ -5,25 +5,25 @@
 # License: MIT
 # ============================================
 
+import sys
 import os
 import requests
 from utils import SYMBOL_URL_MAPPING
 
 def download_symbol_files(game_id: str) -> bool:
-    """
-    Downloads the symbol files for the given game identifier.
-
-    Parameters:
-    - game_id (str): The identifier or name of the game.
-
-    Returns:
-    - bool: True if the download succeeded, False otherwise.
-    """
     if game_id not in SYMBOL_URL_MAPPING:
-        print(f"Error: No symbol file URL found fo`r game ID {game_id}")
+        print(f"Error: No symbol file URL found for game ID {game_id}")
         return False
 
-    symbol_dir = os.path.join("../symbols")
+    # Determine the base path
+    if getattr(sys, 'frozen', False):
+        # If the application is frozen, use the executable's directory
+        base_path = sys._MEIPASS
+    else:
+        # Otherwise, use the script's directory
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+    symbol_dir = os.path.join(base_path, "symbols")
     os.makedirs(symbol_dir, exist_ok=True)
 
     symbol_url = SYMBOL_URL_MAPPING[game_id]

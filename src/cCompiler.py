@@ -136,7 +136,7 @@ def update_include_paths(file_path, game_id):
         content = re.sub(r'#include "include/types.h"', '', content)
 
         # Prepare new include paths
-        new_includes = '#include "../include/generic_types.h"\n'
+        new_includes = '#include "include/generic_types.h"\n'
 
         # Recursively scan include/gc/ for .h files
         gc_include_dir = os.path.join('include', 'gc')
@@ -144,15 +144,15 @@ def update_include_paths(file_path, game_id):
             for file in files:
                 if file.endswith('.h'):
                     relative_path = os.path.relpath(os.path.join(root, file), start='include')
-                    new_includes += f'#include "../{relative_path}"\n'
+                    new_includes += f'#include "include/{relative_path}"\n'
 
         # Check for a header file matching the game_id in the include directory
-        game_id_header = os.path.join('../include', f'{game_id}.h')
+        game_id_header = os.path.join('include', f'{game_id}.h')
         print(f"Looking for header file at: {game_id_header}")
 
         if os.path.exists(game_id_header):
             print(f"Header file found: {game_id_header}")
-            new_includes += f'#include "../include/{game_id}.h"\n'
+            new_includes += f'#include "include/{game_id}.h"\n'
         else:
             print(f"Header file not found: {game_id_header}")
 
