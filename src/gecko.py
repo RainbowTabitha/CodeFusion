@@ -7,6 +7,16 @@
 
 import struct
 
+def remove_unnecessary_blank_lines(text):
+    # Split the text into lines
+    lines = text.splitlines()
+    
+    # Filter out all blank lines
+    filtered_lines = [line for line in lines if line.strip()]
+
+    # Join the lines back into a single string
+    return "\n".join(filtered_lines) 
+
 def convert_aout_to_gecko(input_file, start_address, output_file, overwrite=False):
     # Read the a.out file
     with open(input_file, 'rb') as f:
@@ -84,6 +94,10 @@ def convert_aout_to_gecko(input_file, start_address, output_file, overwrite=Fals
         new_address = hex(int(address_part, 16) + 1)[2:].upper().zfill(8)  # Add 1 and format
         formatted_code = formatted_code.replace(address_part, new_address, 1)
     
+    formatted_code = remove_unnecessary_blank_lines(formatted_code)
+
+
+    
     # Write to dist/code.txt
     with open(output_file, "w") as output_file:
-        output_file.write(formatted_code)
+        output_file.write(remove_unnecessary_blank_lines(formatted_code))
