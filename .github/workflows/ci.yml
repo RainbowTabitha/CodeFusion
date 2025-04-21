@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-win32:
+    name: "Windows Build"
+    runs-on: windows-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install PIP Modules
+      run: python -m pip install -r requirements.txt
+
+    - name: Build Project (Dynamic build)
+      run: pyinstaller -w --onefile .\main.py --add-data "dependencies/*/;dependencies" --add-data "include/*/;include --name="CodeFusion" --icon="icon.ico"
+
+    - name: Trusted Signing
+      uses: azure/trusted-signing-action@v0.5.1
+      with:
+        azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+        endpoint: https://eus.codesigning.azure.net/
+        trusted-signing-account-name: TabithaHanegan
+        certificate-profile-name: vscx-certificate-profile
+        files-folder: Binary/x64/
+        files-folder-filter: exe,dll
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: CodeFusion-win32
+        path: dist
