@@ -4,7 +4,11 @@ import platform
 from CTkMessagebox import CTkMessagebox
 import gecko
 import utils
+import sys
+import os
+from cCompiler import compile_to_asm, append_codewrite_to_asm, remove_gnu_attribute, replace_bl_calls, update_include_paths
 from symbol_processor import dtkSymbolsTxtToLst, parse_lst_file
+import re
 
 class GameLogic:
     def handle_geckoos_code(self, app):
@@ -82,3 +86,53 @@ class GameLogic:
                             os.remove(file)
                         except:
                             pass
+
+    def handle_c_code(self, app):
+        input_text = app.inputCode.get("1.0", "end-1c")
+        with open("temp.c", "w") as temp_file:
+            temp_file.write(input_text)
+        if app.selected_game != None:
+            game_id = utils.GAME_TO_ID[app.selected_game]
+        else:
+            game_id = "generic"
+        update_include_paths("temp.c", game_id)
+        compile_to_asm("temp.c")
+
+        if app.selected_game != None:
+            symbol_file_path = os.path.join(os.path.dirname(__file__), f"../symbols/{game_id}.sym")
+            dtkSymbolsTxtToLst(symbol_file_path, "temp.out")
+            output_filename = parse_lst_file("temp.out", "temp_codewrite.out")
+            asm_filename = "temp.s"
+            append_codewrite_to_asm(asm_filename, "temp_codewrite.out")
+
+        # Remove .gnu_attribute from the generated .s file
+        asm_filename = "temp.s"
+        remove_gnu_attribute(asm_filename)
+
+        # Replace `bl` calls in the generated .s file
+        replace_bl_calls(asm_filename)
+        
+        cmd = ["../dependencies/codewrite/powerpc-gekko-as.exe"]
+        if not platform.system() == "Windows":
+            cmd = ["wine"] + cmd
+            env = {**os.environ, "WINEDEBUG": "-all"}
+        else:
+            env = None
+
+        cmd.extend(["-a32", "-mbig", "-mregnames", "-mgekko", asm_filename])
+
+        try:
+            subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+            start_address = app.insertionAddress.get("1.0", "end-1c")
+            gecko.convert_aout_to_gecko('a.out', start_address, 'b.out', overwrite=False)
+            with open("b.out", "r") as output_file:
+                output_text = output_file.read()
+            app.output.delete("1.0", "end")
+            app.output.insert("1.0", output_text)
+
+            CTkMessagebox(message="Patched successfully.", title="Success", icon="check", option_1="OK")
+        except subprocess.CalledProcessError as e:
+            error_msg = e.stderr.decode()
+            CTkMessagebox(message=f"Error occurred: {error_msg}", title="Error", icon="warning", option_1="OK")
+        finally:
+            pass

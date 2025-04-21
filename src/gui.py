@@ -308,7 +308,16 @@ class App(customtkinter.CTk):
             self.logic.handle_geckoos_code(self)
         elif self.input_file_var.get() == "PowerPC ASM" and self.output_var.get() == "GeckoOS Code":
             self.logic.handle_powerpc_asm(self)
-
+        elif self.input_file_var.get() == "C Code" and self.output_var.get() == "GeckoOS Code":
+            self.logic.handle_c_code(self)
+        else:
+            CTkMessagebox(
+                master=self,
+                message="Invalid input or output format.",
+                title="Error",
+                icon="warning",
+                width=300,
+                height=200)
         self.is_patching = False  # Reset the flag
         self.patchButton.configure(text="Patch", state="normal")  # Reset button text and state
 
