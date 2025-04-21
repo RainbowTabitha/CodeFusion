@@ -53,6 +53,21 @@ class GameLogic:
 
         print("Successfully added symbols to the temp.asm file.")
 
+    def get_gcc_gekko_command(self):
+        # Determine the base path
+        if getattr(sys, 'frozen', False):
+            # If the application is frozen, use the executable's directory
+            base_path = sys._MEIPASS
+        else:
+            # Otherwise, use the script's directory
+            base_path = os.path.dirname(os.path.abspath(__file__)) + "/../"
+
+        # Construct the path to the GCC executable
+        gcc_path = os.path.join(base_path, "dependencies", "codewrite", "powerpc-gekko-as.exe")
+        print(gcc_path)
+        cmd = [gcc_path]
+        return cmd
+
     def handle_powerpc_asm(self, app):
         if app.selected_game != None:
             self.add_symbols_to_temp_asm(app)
@@ -61,7 +76,7 @@ class GameLogic:
             with open("temp.asm", "w") as temp_file:
                 temp_file.write(input_text)
 
-        cmd = ["../dependencies/codewrite/powerpc-gekko-as.exe"]
+        cmd = self.get_gcc_gekko_command()
         if not platform.system() == "Windows":
             cmd = ["wine"] + cmd
             env = {**os.environ, "WINEDEBUG": "-all"}
@@ -119,7 +134,7 @@ class GameLogic:
         # Replace `bl` calls in the generated .s file
         replace_bl_calls(asm_filename)
         
-        cmd = ["../dependencies/codewrite/powerpc-gekko-as.exe"]
+        cmd = self.get_gcc_gekko_command()
         if not platform.system() == "Windows":
             cmd = ["wine"] + cmd
             env = {**os.environ, "WINEDEBUG": "-all"}

@@ -10,6 +10,26 @@ import sys
 import os
 import re
 import platform
+
+def get_gcc_command():
+    # Determine the base path
+    if getattr(sys, 'frozen', False):
+        # If the application is frozen, use the executable's directory
+        base_path = sys._MEIPASS
+    else:
+        # Otherwise, use the script's directory
+        base_path = os.path.dirname(os.path.abspath(__file__)) + "/../"
+
+    # Construct the path to the GCC executable
+    gcc_path = os.path.join(base_path, "dependencies", "powerpc-gcc", "bin", "powerpc-eabi-gcc.exe")
+
+    # Ensure the path is valid and return the command list
+    if os.path.exists(gcc_path):
+        return [gcc_path]
+    else:
+        print(f"Error: GCC executable not found at {gcc_path}")
+        return None
+
 def compile_to_asm(filename):
     # Ensure the file has a .c extension
     if not filename.endswith(".c"):
@@ -19,7 +39,7 @@ def compile_to_asm(filename):
     # Extract the base name (without extension) for output file
     base_name = os.path.splitext(filename)[0]
     
-    cmd = ["../dependencies/powerpc-gcc/bin/powerpc-eabi-gcc.exe"]
+    cmd = get_gcc_command()
     if not platform.system() == "Windows":
         cmd = ["wine"] + cmd
         env = {**os.environ, "WINEDEBUG": "-all"}
