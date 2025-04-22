@@ -9,3 +9,6 @@ a.out
 b.out
 temp.c
 temp.s
+*.spec
+build/
+dist/
