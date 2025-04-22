@@ -18,7 +18,7 @@ def get_gcc_command():
         base_path = sys._MEIPASS
     else:
         # Otherwise, use the script's directory
-        base_path = os.path.dirname(os.path.abspath(__file__)) + "/../"
+        base_path = os.getcwd()
 
     # Construct the path to the GCC executable
     gcc_path = os.path.join(base_path, "dependencies", "powerpc-gcc", "bin", "powerpc-eabi-gcc.exe")
@@ -46,7 +46,7 @@ def compile_to_asm(filename):
     else:
         env = None
 
-    cmd.extend(["-mcpu=powerpc", "-S", "-fno-asynchronous-unwind-tables", "-fno-ident", "-fno-common", "-O0", "-fno-optimize-sibling-calls", filename, "-o", f"{base_name}.s"])
+    cmd.extend(["-mcpu=powerpc", "-S", "-fno-asynchronous-unwind-tables", "-fno-ident", "-fno-common", "-O1", "-fno-optimize-sibling-calls", filename, "-o", f"{base_name}.s"])
 
     try:
         # Run the compilation command
@@ -128,42 +128,51 @@ def replace_bl_calls(asm_filename):
         print(f"Error while replacing 'bl' calls in {asm_filename}: {e}")
 
 def update_include_paths(file_path, game_id):
+    print("Updating include paths...")
+    print(f"File path: {file_path}")
+    print(f"Game ID: {game_id}")
+
     try:
         with open(file_path, 'r') as file:
             content = file.read()
+        print("File content read successfully.")
 
         # Remove existing include for types.h
         content = re.sub(r'#include "include/types.h"', '', content)
+        print("Removed existing include for types.h.")
 
         # Prepare new include paths
-        new_includes = '#include "../include/generic_types.h"\n'
+        new_includes = '#include "include/generic_types.h"\n'
+        print("Prepared new include paths.")
 
-        # Recursively scan include/gc/ for .h files
-        gc_include_dir = os.path.join('include', 'gc')
-        for root, _, files in os.walk(gc_include_dir):
-            for file in files:
-                if file.endswith('.h'):
-                    relative_path = os.path.relpath(os.path.join(root, file), start='include')
-                    new_includes += f'#include "../{relative_path}"\n'
+        ## Recursively scan include/gc/ for .h files
+        #gc_include_dir = os.path.join('include', 'gc')
+        #print(f"Scanning directory: {gc_include_dir}")
+        #for root, _, files in os.walk(gc_include_dir):
+        #    for file in files:
+        #        if file.endswith('.h'):
+        #            relative_path = os.path.relpath(os.path.join(root, file))
+        #            new_includes += f'#include "{relative_path}"\n'
+        #            print(f"Added include for: {relative_path}")
 
         # Check for a header file matching the game_id in the include directory
-        game_id_header = os.path.join('../include', f'{game_id}.h')
+        game_id_header = os.path.join('include', f'{game_id}.h')
         print(f"Looking for header file at: {game_id_header}")
 
         if os.path.exists(game_id_header):
             print(f"Header file found: {game_id_header}")
-            new_includes += f'#include "../include/{game_id}.h"\n'
+            new_includes += f'#include "include/{game_id}.h"\n'
         else:
             print(f"Header file not found: {game_id_header}")
 
         # Prepend new includes to the existing content
         updated_content = new_includes + content
+        print("Prepended new includes to the content.")
 
         with open(file_path, 'w') as file:
             file.write(updated_content)
-
         print(f"Updated include paths in {file_path}.")
-    
+
     except FileNotFoundError as e:
         print(f"Error: {e}")
     except Exception as e:

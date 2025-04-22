@@ -32,7 +32,7 @@ class GameLogic:
 
     def add_symbols_to_temp_asm(self, app):
         game_id = utils.GAME_TO_ID[app.selected_game]
-        symbol_file_path = os.path.join(os.path.dirname(__file__), f"../symbols/{game_id}.sym")
+        symbol_file_path = os.path.join(os.getcwd(), f"symbols/{game_id}.sym")
 
         dtkSymbolsTxtToLst(symbol_file_path, "temp.out")
         output_filename = parse_lst_file("temp.out", "temp_codewrite.out")
@@ -60,7 +60,7 @@ class GameLogic:
             base_path = sys._MEIPASS
         else:
             # Otherwise, use the script's directory
-            base_path = os.path.dirname(os.path.abspath(__file__)) + "/../"
+            base_path = os.getcwd()
 
         # Construct the path to the GCC executable
         gcc_path = os.path.join(base_path, "dependencies", "codewrite", "powerpc-gekko-as.exe")
@@ -121,7 +121,7 @@ class GameLogic:
         compile_to_asm("temp.c")
 
         if app.selected_game != None:
-            symbol_file_path = os.path.join(os.path.dirname(__file__), f"../symbols/{game_id}.sym")
+            symbol_file_path = os.path.join(os.getcwd(), f"symbols/{game_id}.sym")
             dtkSymbolsTxtToLst(symbol_file_path, "temp.out")
             output_filename = parse_lst_file("temp.out", "temp_codewrite.out")
             asm_filename = "temp.s"

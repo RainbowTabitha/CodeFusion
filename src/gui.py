@@ -343,7 +343,7 @@ class App(customtkinter.CTk):
     def on_game_selected(self, choice):
         self.selected_game = choice
         game_id = GAME_TO_ID[choice]
-        symbol_file_path = os.path.join(os.path.dirname(__file__), f"../symbols/{game_id}.sym")
+        symbol_file_path = os.path.join(os.getcwd(), f"symbols/{game_id}.sym")
         if choice != "None" and not os.path.exists(symbol_file_path):
             msg = CTkMessagebox(
                 master=self,
