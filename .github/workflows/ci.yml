@@ -36,7 +36,7 @@ jobs:
     - name: Update Version File
       shell: pwsh
       run: |
-        (Get-Content src/version.py) -replace '\d+\.\d+\.\d+', $env:GIT_COMMIT_SHORT_HASH | Set-Content src/version.py
+        (Get-Content src/version.py) -replace 'appVersion = "\d+\.\d+\.\d+"', "appVersion = \"$env:GIT_COMMIT_SHORT_HASH\"" | Set-Content src/version.py
           
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
