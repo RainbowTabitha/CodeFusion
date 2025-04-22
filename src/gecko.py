@@ -95,8 +95,6 @@ def convert_aout_to_gecko(input_file, start_address, output_file, overwrite=Fals
         formatted_code = formatted_code.replace(address_part, new_address, 1)
     
     formatted_code = remove_unnecessary_blank_lines(formatted_code)
-
-
     
     # Write to dist/code.txt
     with open(output_file, "w") as output_file:
