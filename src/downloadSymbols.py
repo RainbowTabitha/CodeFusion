@@ -15,15 +15,7 @@ def download_symbol_files(game_id: str) -> bool:
         print(f"Error: No symbol file URL found for game ID {game_id}")
         return False
 
-    # Determine the base path
-    if getattr(sys, 'frozen', False):
-        # If the application is frozen, use the executable's directory
-        base_path = sys._MEIPASS
-    else:
-        # Otherwise, use the script's directory
-        base_path = os.path.dirname(os.path.abspath(__file__))
-
-    symbol_dir = os.path.join(base_path, "symbols")
+    symbol_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "symbols")
     os.makedirs(symbol_dir, exist_ok=True)
 
     symbol_url = SYMBOL_URL_MAPPING[game_id]
