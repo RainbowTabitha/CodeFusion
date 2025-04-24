@@ -15,7 +15,14 @@ def download_symbol_files(game_id: str) -> bool:
         print(f"Error: No symbol file URL found for game ID {game_id}")
         return False
 
-    symbol_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "symbols")
+    if getattr(sys, 'frozen', False):
+        # If the application is frozen, use the directory of the executable
+        symbol_dir = os.path.join(os.path.dirname(sys.executable), "symbols")
+    else:
+        # Otherwise, use the directory of the script
+        symbol_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "symbols")
+
+    # Create the symbols directory if it doesn't exist
     os.makedirs(symbol_dir, exist_ok=True)
 
     symbol_url = SYMBOL_URL_MAPPING[game_id]
