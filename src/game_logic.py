@@ -162,4 +162,12 @@ class GameLogic:
             error_msg = e.stderr.decode()
             CTkMessagebox(message=f"Error occurred: {error_msg}", title="Error", icon="warning", option_1="OK")
         finally:
-            pass
+            for file in ["temp.asm", "a.out", "b.out", "temp.c", "temp.s", "temp.out", "temp_codewrite.out"]:
+                try:
+                    os.remove(file)
+                except:
+                    for file in ["temp.asm", "a.out", "b.out", "temp.c", "temp.s", "temp.out", "temp_codewrite.out"]:
+                        try:
+                            os.remove(file)
+                        except:
+                            pass

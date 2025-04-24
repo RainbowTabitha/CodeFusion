@@ -13,18 +13,13 @@ import platform
 from CTkMessagebox import CTkMessagebox
 
 def get_gcc_command():
-    # Determine the base path
     if getattr(sys, 'frozen', False):
-        # If the application is frozen, use the executable's directory
         base_path = sys._MEIPASS
     else:
-        # Otherwise, use the script's directory
         base_path = os.getcwd()
 
-    # Construct the path to the GCC executable
     gcc_path = os.path.join(base_path, "dependencies", "powerpc-gcc", "bin", "powerpc-eabi-gcc.exe")
 
-    # Ensure the path is valid and return the command list
     if os.path.exists(gcc_path):
         return [gcc_path]
     else:
@@ -32,12 +27,10 @@ def get_gcc_command():
         return None
 
 def compile_to_asm(filename):
-    # Ensure the file has a .c extension
     if not filename.endswith(".c"):
         print("Error: Please provide a valid C file with a .c extension.")
         return
     
-    # Extract the base name (without extension) for output file
     base_name = os.path.splitext(filename)[0]
     
     cmd = get_gcc_command()
@@ -50,21 +43,19 @@ def compile_to_asm(filename):
     cmd.extend(["-mcpu=powerpc", "-S", "-fno-asynchronous-unwind-tables", "-fno-ident", "-fno-common", "-O1", "-fno-optimize-sibling-calls", filename, "-o", f"{base_name}.s"])
 
     try:
-        # Run the compilation command
         result = subprocess.run(cmd, check=False, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         
         if result.returncode != 0:
-            # If the return code is not zero, it indicates an error
             error_msg = result.stderr.decode() if result.stderr else "Unknown error occurred."
             CTkMessagebox(message=f"Error during compilation: {error_msg}", title="Compilation Error", icon="warning", option_1="OK")
             return False  # Indicate failure
 
         print(f"Compiled {filename} to {base_name}.s successfully.")
-        return True  # Indicate success
+        return True
     
     except Exception as e:
         CTkMessagebox(message=f"An unexpected error occurred: {str(e)}", title="Error", icon="warning", option_1="OK")
-        return False  # Indicate failure
+        return False
 
 def append_codewrite_to_asm(asm_filename, codewrite_lst_filename):
     try:
