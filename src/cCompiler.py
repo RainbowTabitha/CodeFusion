@@ -10,6 +10,7 @@ import sys
 import os
 import re
 import platform
+from CTkMessagebox import CTkMessagebox
 
 def get_gcc_command():
     # Determine the base path
@@ -50,10 +51,20 @@ def compile_to_asm(filename):
 
     try:
         # Run the compilation command
-        subprocess.run(cmd, check=True, env=env)
+        result = subprocess.run(cmd, check=False, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
+        if result.returncode != 0:
+            # If the return code is not zero, it indicates an error
+            error_msg = result.stderr.decode() if result.stderr else "Unknown error occurred."
+            CTkMessagebox(message=f"Error during compilation: {error_msg}", title="Compilation Error", icon="warning", option_1="OK")
+            return False  # Indicate failure
+
         print(f"Compiled {filename} to {base_name}.s successfully.")
-    except subprocess.CalledProcessError as e:
-        print(f"Error during compilation: {e}")
+        return True  # Indicate success
+    
+    except Exception as e:
+        CTkMessagebox(message=f"An unexpected error occurred: {str(e)}", title="Error", icon="warning", option_1="OK")
+        return False  # Indicate failure
 
 def append_codewrite_to_asm(asm_filename, codewrite_lst_filename):
     try:
@@ -127,7 +138,7 @@ def replace_bl_calls(asm_filename):
     except Exception as e:
         print(f"Error while replacing 'bl' calls in {asm_filename}: {e}")
 
-def update_include_paths(file_path, game_id):
+def update_include_paths(file_path, game_id="generic"):
     print("Updating include paths...")
     print(f"File path: {file_path}")
     print(f"Game ID: {game_id}")
@@ -162,8 +173,6 @@ def update_include_paths(file_path, game_id):
             #            relative_path = os.path.relpath(os.path.join(root, file), start='include')
             #             new_includes += f'#include "../{relative_path}"\n'
 
-            # Check for a header file matching the game_id in the include directory
-            # Determine the header file path based on whether the application is frozen
             if getattr(sys, 'frozen', False):
                 game_id_header = os.path.join(sys._MEIPASS, 'include', f'{game_id}.h')
             else:
@@ -186,7 +195,7 @@ def update_include_paths(file_path, game_id):
         print(f"Updated include paths in {file_path}.")
 
     except FileNotFoundError as e:
-        print(f"Error: {e}")
+        CTkMessagebox(message=f"Error occurred: {e}", title="Error", icon="warning", option_1="OK")
     except Exception as e:
-        print(f"Error while updating include paths in {file_path}: {e}")
-        print(f"Error while updating include paths in {file_path}: {e}")
+        error_msg = e.stderr.decode()
+        CTkMessagebox(message=f"Error occurred: {error_msg}", title="Error", icon="warning", option_1="OK")

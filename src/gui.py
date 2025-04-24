@@ -63,7 +63,7 @@ class App(customtkinter.CTk):
         self.credits_button = customtkinter.CTkButton(self.sidebar_frame, text="Credits", command=self.credits_view)
         self.credits_button.grid(row=4, column=0, padx=20, pady=10)
         
-        self.version_label = customtkinter.CTkLabel(self.sidebar_frame, text=version.appVersion, anchor="w", font=("Arial", 18, "bold"))
+        self.version_label = customtkinter.CTkLabel(self.sidebar_frame, text=f"v{version.appVersion}", anchor="w", font=("Arial", 18, "bold"))
         self.version_label.grid(row=5, column=0, padx=20, pady=(10, 5))
 
     def n64_view(self):

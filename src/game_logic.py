@@ -118,7 +118,12 @@ class GameLogic:
         else:
             game_id = "generic"
         update_include_paths("temp.c", game_id)
-        compile_to_asm("temp.c")
+        try:
+            if not compile_to_asm("temp.c"):
+                return
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return
 
         if app.selected_game != None:
             symbol_file_path = os.path.join(os.getcwd(), f"symbols/{game_id}.sym")
