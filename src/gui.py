@@ -168,7 +168,7 @@ class App(customtkinter.CTk):
         output_label.place(x=20, y=80)
 
         self.output_var = StringVar(value="GeckoOS Code")
-        output_options = ["GeckoOS Code", "Patched ROM"]#, "XDelta Patch"]
+        output_options = ["GeckoOS Code", "Patched ROM", "XDelta Patch"]
 
         output_frame = customtkinter.CTkFrame(self.gcn_wii_frame, fg_color="transparent")
         output_frame.place(x=120, y=80)
@@ -352,6 +352,12 @@ class App(customtkinter.CTk):
             self.logic.handle_powerpc_asm_rom(self)
         elif self.input_file_var.get() == "C Code" and self.output_var.get() == "Patched ROM":
             self.logic.handle_c_code_rom(self)
+        elif self.input_file_var.get() == "GeckoOS Code" and self.output_var.get() == "XDelta Patch":
+            self.logic.handle_geckoos_code_delta(self)
+        elif self.input_file_var.get() == "PowerPC ASM" and self.output_var.get() == "XDelta Patch":
+            self.logic.handle_powerpc_asm_delta(self)
+        elif self.input_file_var.get() == "C Code" and self.output_var.get() == "XDelta Patch":
+            self.logic.handle_c_code_delta(self)
         else:
             CTkMessagebox(
                 master=self,

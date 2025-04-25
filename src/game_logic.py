@@ -2,6 +2,7 @@ import os
 import subprocess
 import platform
 import sys
+import xdelta3
 import shutil
 from CTkMessagebox import CTkMessagebox
 import gecko
@@ -166,6 +167,24 @@ class GameLogic:
         if result.returncode != 0:
             error_msg = result.stderr if result.stderr else "Unknown error occurred."
             raise RuntimeError(f"ISO to RVZ conversion failed: {error_msg}")
+        
+    def patch_xdelta(self, iso_path_stock, modified_iso_path, xdeltaFile="delta.xdelta"):
+        """Rebuild ISO from extracted files"""
+        xdelta_path = os.path.join(self.base_path, "dependencies", "xdelta.exe")
+        if not os.path.exists(xdelta_path):
+            raise FileNotFoundError(f"XDelta not found at: {xdelta_path}")
+            
+        env = self._get_environment()
+        cmd = [xdelta_path]
+        if platform.system() != "Windows":
+            cmd = ["wine"] + cmd
+            
+        cmd += ["-e", "-s", iso_path_stock, modified_iso_path, xdeltaFile]
+        result = subprocess.run(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
+        if result.returncode != 0:
+            error_msg = result.stderr.decode() if result.stderr else "Unknown error occurred."
+            raise RuntimeError(f"ISO rebuilding failed: {error_msg}")
 
     def process_rom(self, app, gecko_code_file):
         """Process ROM with Gecko codes"""
@@ -403,6 +422,42 @@ class GameLogic:
                 
             # Process ROM
             self.process_rom(app, "b.txt")
+            
+        except Exception as e:
+            CTkMessagebox(message=f"Error occurred: {str(e)}", title="Error", icon="warning", option_1="OK")
+        finally:
+            self._cleanup_files()
+
+    def handle_powerpc_asm_delta(self, app):
+        """Handle PowerPC Assembly Code for XDelta patching"""
+        try:
+            # Create ASM file
+            if app.selected_game is not None:
+                self.add_symbols_to_temp_asm(app)
+            else:
+                self._create_temp_asm(app)
+
+            # Compile ASM
+            cmd = self.get_gcc_gekko_command()
+            cmd.extend(["-a32", "-mbig", "-mregnames", "-mgekko", "temp.asm"])
+            env = self._get_environment()
+            
+            subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+            
+            # Convert to Gecko code
+            start_address = app.insertionAddress.get("1.0", "end-1c")
+            gecko.convert_aout_to_gecko('a.out', start_address, 'b.out', overwrite=False)
+            
+            # Create Gecko code file
+            with open("b.out", "r") as output_file:
+                output_text = output_file.read()
+                
+            with open("b.txt", "w") as output_file:
+                output_file.write("$CodeFusion\n" + output_text)
+                
+            # Process ROM
+            self.process_rom(app, "b.txt")
+            self.patch_xdelta(app.rom_file_entry.get(), app.rom_file_entry.get()[:-4] + "_modified.iso", app.rom_file_entry.get()[:-4] + "_modified.xdelta")
             
         except Exception as e:
             CTkMessagebox(message=f"Error occurred: {str(e)}", title="Error", icon="warning", option_1="OK")
