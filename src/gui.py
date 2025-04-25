@@ -168,7 +168,7 @@ class App(customtkinter.CTk):
         output_label.place(x=20, y=80)
 
         self.output_var = StringVar(value="GeckoOS Code")
-        output_options = ["GeckoOS Code"]#, "Patched ROM", "XDelta Patch"]
+        output_options = ["GeckoOS Code", "Patched ROM"]#, "XDelta Patch"]
 
         output_frame = customtkinter.CTkFrame(self.gcn_wii_frame, fg_color="transparent")
         output_frame.place(x=120, y=80)
@@ -243,12 +243,29 @@ class App(customtkinter.CTk):
         if self.input_file_var.get() == "GeckoOS Code":
             self.label1.grid_remove()
             self.insertionAddress.grid_remove()
-            self.game_label.place_forget()
-            self.game_dropdown.place_forget()
-            self.rom_file_label.place_forget()
-            self.rom_file_entry.place_forget()
-            self.rom_file_button.place_forget()
+        
+            if self.output_var.get() == "GeckoOS Code":
+                # Hide both ROM and Game selection
+                self.rom_file_label.place_forget()
+                self.rom_file_entry.place_forget()
+                self.rom_file_button.place_forget()
+                self.game_label.place_forget()
+                self.game_dropdown.place_forget()
+            else:
+                # Show only ROM file selection
+                self.rom_file_label.place(x=20, y=140)
+                self.rom_file_entry.place(x=120, y=140)
+                self.rom_file_button.place(x=370, y=140)
+                self.game_label.place_forget()
+                self.game_dropdown.place_forget()
+        
             # Move Codes section up
+            self.label2.grid_configure(row=2, pady=(200, 0))
+            self.inputCode.grid_configure(row=3)
+            self.label3.grid_configure(row=2)
+            self.output.grid_configure(row=3, rowspan=1)
+            self.gcn_wii_frame.grid_rowconfigure(3, weight=1)
+            self.gcn_wii_frame.grid_rowconfigure(5, weight=0)
             self.label2.grid_configure(row=2, pady=(200, 0))
             self.inputCode.grid_configure(row=3)
             # Adjust Output section
@@ -303,7 +320,7 @@ class App(customtkinter.CTk):
         self.update_idletasks()
 
     def select_rom_file(self):
-        file_path = tk.filedialog.askopenfilename(title="Select ROM File", filetypes=[("Nintendo GameCube ROMs", "*.iso")])
+        file_path = tk.filedialog.askopenfilename(title="Select ROM File",    filetypes=[("Nintendo GameCube ROMs", "*.iso"), ("Nintendo GameCube ROMs", "*.rvz")])
         if file_path:
             self.rom_file_entry.delete(0, tk.END)  # Clear the entry
             self.rom_file_entry.insert(0, file_path)  # Insert the selected file path
@@ -329,6 +346,12 @@ class App(customtkinter.CTk):
             self.logic.handle_powerpc_asm(self)
         elif self.input_file_var.get() == "C Code" and self.output_var.get() == "GeckoOS Code":
             self.logic.handle_c_code(self)
+        elif self.input_file_var.get() == "GeckoOS Code" and self.output_var.get() == "Patched ROM":
+            self.logic.handle_geckoos_code_rom(self)
+        elif self.input_file_var.get() == "PowerPC ASM" and self.output_var.get() == "Patched ROM":
+            self.logic.handle_powerpc_asm_rom(self)
+        elif self.input_file_var.get() == "C Code" and self.output_var.get() == "Patched ROM":
+            self.logic.handle_c_code_rom(self)
         else:
             CTkMessagebox(
                 master=self,

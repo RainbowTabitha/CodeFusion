@@ -12,3 +12,5 @@ temp.s
 *.spec
 build/
 dist/
+tmp/
+*.DS_Store

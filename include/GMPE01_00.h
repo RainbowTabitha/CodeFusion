@@ -120,7 +120,5 @@ typedef struct GwSystem_s {
 /* 0x6A */ u8 unk_6A[0x72];
 } GWSYSTEM; //8018fcf8, sizeof 0xDC
 
-
-
 extern GWSYSTEM GWSystem;
 extern GWPLAYER GWPlayer[GW_PLAYER_MAX];
