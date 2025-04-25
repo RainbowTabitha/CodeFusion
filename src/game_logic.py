@@ -2,6 +2,7 @@ import os
 import subprocess
 import platform
 import sys
+import shutil
 from CTkMessagebox import CTkMessagebox
 import gecko
 import utils
@@ -32,13 +33,13 @@ class GameLogic:
         """Clean up temporary files"""
         if files_to_clean is None:
             files_to_clean = ["temp.asm", "a.out", "b.out", "b.txt", "temp.out", "temp_codewrite.out", "temp.c", "temp.s"]
-        
         for file in files_to_clean:
             try:
                 if os.path.exists(file):
                     os.remove(file)
             except:
                 pass
+        shutil.rmtree("tmp/")
 
     def get_gcc_gekko_command(self):
         """Get the GCC Gekko command with appropriate path"""
