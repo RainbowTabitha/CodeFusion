@@ -2,7 +2,6 @@ import os
 import subprocess
 import platform
 import sys
-import xdelta3
 import shutil
 from CTkMessagebox import CTkMessagebox
 import gecko
